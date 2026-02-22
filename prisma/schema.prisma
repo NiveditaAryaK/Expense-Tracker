@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  amount      Float
+  type        String   // "debit" | "credit"
+  merchant    String?
+  category    String   @default("Uncategorized")
+  bank        String?
+  account     String?  // last 4 digits
+  upiId       String?
+  rawSms      String
+  source      String   @default("sms") // "sms" | "manual"
+  date        DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([category])
+  @@index([type])
+}
+
+model Budget {
+  id        String   @id @default(cuid())
+  category  String   @unique
+  amount    Float
+  month     Int      // 1-12
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SmsLog {
+  id          String   @id @default(cuid())
+  messageId   String   @unique // iMessage rowid or hash to prevent duplicates
+  sender      String
+  body        String
+  parsed      Boolean  @default(false)
+  processedAt DateTime @default(now())
+}
