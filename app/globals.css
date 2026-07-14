@@ -4,26 +4,91 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --page: 60 14% 97%;
+    --background: 60 14% 97%;
+    --foreground: 0 0% 4%;
+    --card: 60 14% 99%;
+    --card-foreground: 0 0% 4%;
+    --popover: 60 14% 99%;
+    --popover-foreground: 0 0% 4%;
     --primary: 243 75% 59%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 53 12% 93%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 53 12% 93%;
+    --muted-foreground: 45 3% 46%;
+    --accent: 243 75% 96%;
+    --accent-foreground: 243 75% 40%;
+    --destructive: 0 61% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 53 12% 87%;
+    --input: 53 12% 87%;
     --ring: 243 75% 59%;
     --radius: 0.75rem;
+
+    /* Chart chrome */
+    --chart-grid: 53 12% 87%;
+    --chart-baseline: 55 9% 74%;
+    --chart-ink-muted: 45 3% 52%;
+
+    /* Status */
+    --status-good: 120 86% 34%;
+    --status-warning: 41 96% 54%;
+    --status-serious: 17 79% 64%;
+    --status-critical: 0 61% 52%;
+
+    /* Categorical (fixed order, identity — never reassigned by rank) */
+    --cat-1: 213 68% 50%;   /* blue */
+    --cat-2: 159 73% 40%;   /* aqua */
+    --cat-3: 41 100% 46%;   /* yellow */
+    --cat-4: 120 100% 26%;  /* green */
+    --cat-5: 249 48% 44%;   /* violet */
+    --cat-6: 0 73% 59%;     /* red */
+    --cat-7: 337 70% 70%;   /* magenta */
+    --cat-8: 17 82% 56%;    /* orange */
+    --cat-muted: 45 3% 52%; /* uncategorized */
+  }
+
+  .dark {
+    --page: 0 0% 5%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+    --card: 60 2% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 60 2% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 235 85% 73%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 60 2% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 60 2% 15%;
+    --muted-foreground: 55 9% 74%;
+    --accent: 235 40% 20%;
+    --accent-foreground: 235 85% 82%;
+    --destructive: 0 72% 65%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 2% 20%;
+    --input: 60 2% 20%;
+    --ring: 235 85% 73%;
+
+    --chart-grid: 60 2% 17%;
+    --chart-baseline: 60 3% 21%;
+    --chart-ink-muted: 55 9% 74%;
+
+    --status-good: 120 60% 45%;
+    --status-warning: 41 96% 54%;
+    --status-serious: 17 79% 64%;
+    --status-critical: 0 72% 65%;
+
+    --cat-1: 213 77% 56%;
+    --cat-2: 159 73% 36%;
+    --cat-3: 40 100% 39%;
+    --cat-4: 120 100% 26%;
+    --cat-5: 247 69% 72%;
+    --cat-6: 0 72% 65%;
+    --cat-7: 338 61% 58%;
+    --cat-8: 17 70% 50%;
+    --cat-muted: 55 9% 74%;
   }
 
   * {
@@ -31,7 +96,7 @@
   }
 
   body {
-    @apply bg-slate-50 text-foreground;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -40,3 +105,4 @@
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--chart-baseline)); }

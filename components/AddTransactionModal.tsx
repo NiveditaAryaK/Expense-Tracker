@@ -7,21 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { PenLine, MessageSquareText, ArrowDownCircle, ArrowUpCircle, ScanSearch } from 'lucide-react'
+import { CATEGORIES, getCategoryMeta } from '@/lib/category-meta'
 
 interface Props {
   onClose: () => void
   onAdded: () => void
-}
-
-const CATEGORIES = [
-  'Food', 'Shopping', 'Transport', 'Entertainment', 'Health',
-  'Utilities', 'Finance', 'Education', 'Income', 'Uncategorized',
-]
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  Food: '🍕', Shopping: '🛍️', Transport: '🚗', Entertainment: '🎬',
-  Health: '💊', Utilities: '💡', Finance: '💰', Education: '📚',
-  Income: '💵', Uncategorized: '📦',
 }
 
 export default function AddTransactionModal({ onClose, onAdded }: Props) {
@@ -102,8 +93,8 @@ export default function AddTransactionModal({ onClose, onAdded }: Props) {
 
         <Tabs defaultValue="manual">
           <TabsList className="w-full">
-            <TabsTrigger value="manual" className="flex-1">✏️ Manual Entry</TabsTrigger>
-            <TabsTrigger value="sms" className="flex-1">📱 Paste SMS</TabsTrigger>
+            <TabsTrigger value="manual" className="flex-1 gap-1.5"><PenLine size={14} /> Manual Entry</TabsTrigger>
+            <TabsTrigger value="sms" className="flex-1 gap-1.5"><MessageSquareText size={14} /> Paste SMS</TabsTrigger>
           </TabsList>
 
           {error && (
@@ -133,8 +124,12 @@ export default function AddTransactionModal({ onClose, onAdded }: Props) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="debit">💸 Debit</SelectItem>
-                      <SelectItem value="credit">💵 Credit</SelectItem>
+                      <SelectItem value="debit">
+                        <span className="flex items-center gap-2"><ArrowDownCircle size={14} className="text-status-critical" /> Debit</span>
+                      </SelectItem>
+                      <SelectItem value="credit">
+                        <span className="flex items-center gap-2"><ArrowUpCircle size={14} className="text-status-good" /> Credit</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -157,9 +152,16 @@ export default function AddTransactionModal({ onClose, onAdded }: Props) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CATEGORIES.map(c => (
-                        <SelectItem key={c} value={c}>{CATEGORY_EMOJI[c]} {c}</SelectItem>
-                      ))}
+                      {CATEGORIES.map(c => {
+                        const { icon: Icon, textClass } = getCategoryMeta(c)
+                        return (
+                          <SelectItem key={c} value={c}>
+                            <span className="flex items-center gap-2">
+                              <Icon size={14} className={textClass} /> {c}
+                            </span>
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -210,8 +212,8 @@ export default function AddTransactionModal({ onClose, onAdded }: Props) {
                   onChange={e => setSmsForm({ ...smsForm, date: e.target.value })}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Parsing...' : '🔍 Parse & Add'}
+              <Button type="submit" className="w-full gap-1.5" disabled={loading}>
+                <ScanSearch size={14} /> {loading ? 'Parsing...' : 'Parse & Add'}
               </Button>
             </form>
           </TabsContent>

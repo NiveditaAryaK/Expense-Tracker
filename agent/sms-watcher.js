@@ -120,8 +120,15 @@ function queryMessages(lastRowId) {
       lower(m.text) LIKE '%payment%'
     )`
 
+    // m.text often contains embedded newlines (real SMS are multi-line), which
+    // would otherwise split one logical row across several physical output
+    // lines and corrupt the '|||'-delimited parsing below. Replace them with
+    // a sentinel here and restore them after parsing.
+    const NEWLINE_SENTINEL = '␤' // SYMBOL FOR NEWLINE — vanishingly unlikely in real SMS text
+    const textExpr = `replace(m.text, char(10), '${NEWLINE_SENTINEL}')`
+
     const query = lastRowId > 0
-      ? `SELECT m.ROWID, m.text, m.date, h.id AS sender
+      ? `SELECT m.ROWID, ${textExpr}, m.date, h.id AS sender
          FROM message m
          JOIN handle h ON m.handle_id = h.ROWID
          WHERE m.ROWID > ${lastRowId}
@@ -131,7 +138,7 @@ function queryMessages(lastRowId) {
            AND ${contentFilter}
          ORDER BY m.ROWID ASC
          LIMIT 500;`
-      : `SELECT m.ROWID, m.text, m.date, h.id AS sender
+      : `SELECT m.ROWID, ${textExpr}, m.date, h.id AS sender
          FROM message m
          JOIN handle h ON m.handle_id = h.ROWID
          WHERE m.is_from_me = 0
@@ -159,7 +166,12 @@ function queryMessages(lastRowId) {
       const dateMs = appleEpochMs + parseInt(dateNs) / 1000000
       const date = new Date(dateMs)
 
-      return { rowid: parseInt(rowid), text: text.trim(), date, sender: sender.trim() }
+      return {
+        rowid: parseInt(rowid),
+        text: text.replaceAll(NEWLINE_SENTINEL, '\n').trim(),
+        date,
+        sender: sender.trim(),
+      }
     }).filter(Boolean)
 
   } finally {

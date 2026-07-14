@@ -50,10 +50,21 @@ function formatMonth(monthStr: string) {
   }
 }
 
+const tooltipStyle = {
+  borderRadius: 12,
+  border: '1px solid hsl(var(--border))',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+  background: 'hsl(var(--popover))',
+  color: 'hsl(var(--popover-foreground))',
+  fontSize: 13,
+}
+
+const axisTick = { fontSize: 11, fill: 'hsl(var(--chart-muted))' }
+
 export function DailyTrendChart({ trend }: { trend: TrendData[] }) {
   if (!trend || trend.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
+      <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
         No spending data for this period
       </div>
     )
@@ -66,34 +77,27 @@ export function DailyTrendChart({ trend }: { trend: TrendData[] }) {
       <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.18} />
+            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis
-          dataKey="date"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
-          tickLine={false}
-          axisLine={false}
-        />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
+        <XAxis dataKey="date" tick={axisTick} tickLine={false} axisLine={false} />
         <YAxis
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={axisTick}
           tickLine={false}
           axisLine={false}
           tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`}
           width={45}
         />
-        <Tooltip
-          formatter={(value: number) => [formatCurrency(value), 'Spent']}
-          contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-        />
+        <Tooltip formatter={(value: number) => [formatCurrency(value), 'Spent']} contentStyle={tooltipStyle} />
         <Area
           type="monotone"
           dataKey="amount"
-          stroke="#6366f1"
-          strokeWidth={2.5}
+          stroke="hsl(var(--primary))"
+          strokeWidth={2}
           fill="url(#spendGradient)"
+          activeDot={{ r: 4, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
         />
       </AreaChart>
     </ResponsiveContainer>
@@ -103,7 +107,7 @@ export function DailyTrendChart({ trend }: { trend: TrendData[] }) {
 export function MonthlyComparisonChart({ monthly }: { monthly: MonthlyData[] }) {
   if (!monthly || monthly.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
+      <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
         Not enough history yet
       </div>
     )
@@ -114,25 +118,17 @@ export function MonthlyComparisonChart({ monthly }: { monthly: MonthlyData[] }) 
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-        <XAxis
-          dataKey="month"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
-          tickLine={false}
-          axisLine={false}
-        />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
+        <XAxis dataKey="month" tick={axisTick} tickLine={false} axisLine={false} />
         <YAxis
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={axisTick}
           tickLine={false}
           axisLine={false}
           tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`}
           width={45}
         />
-        <Tooltip
-          formatter={(value: number) => [formatCurrency(value), 'Total Spend']}
-          contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-        />
-        <Bar dataKey="amount" fill="#6366f1" radius={[6, 6, 0, 0]} />
+        <Tooltip formatter={(value: number) => [formatCurrency(value), 'Total Spend']} contentStyle={tooltipStyle} />
+        <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
   )

@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { TrendingDown, TrendingUp, Wallet, ArrowUpDown, Plus, RefreshCw, Activity, Terminal } from 'lucide-react'
+import { TrendingDown, TrendingUp, Wallet, ArrowUpDown, Plus, RefreshCw, Menu, Terminal, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
+import Sidebar, { type Section } from '@/components/Sidebar'
 import StatsCard from '@/components/StatsCard'
 import { DailyTrendChart, MonthlyComparisonChart } from '@/components/SpendingChart'
 import CategoryBreakdown from '@/components/CategoryBreakdown'
@@ -43,6 +43,13 @@ interface Transaction {
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
+const SECTION_META: Record<Section, { title: string; subtitle: string }> = {
+  overview: { title: 'Overview', subtitle: 'Your financial snapshot for the period' },
+  transactions: { title: 'Transactions', subtitle: 'Every transaction, searchable and sortable' },
+  categories: { title: 'Categories', subtitle: 'Where your money is going' },
+  agent: { title: 'SMS Agent', subtitle: 'Automatic import from your bank SMS' },
+}
+
 export default function Dashboard() {
   const now = new Date()
   const [month, setMonth] = useState(String(now.getMonth() + 1))
@@ -51,6 +58,9 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [section, setSection] = useState<Section>('overview')
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -77,203 +87,205 @@ export default function Dashboard() {
     fetchData()
   }
 
+  const copyCommand = () => {
+    navigator.clipboard.writeText('npm run agent')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
   const fmt = (n: number) => `₹${Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
   const monthIdx = parseInt(month) - 1
+  const meta = SECTION_META[section]
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top navigation */}
-      <header className="bg-background border-b sticky top-0 z-10">
-        <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-sm">
-              💸
+    <div className="min-h-screen bg-background">
+      <Sidebar
+        active={section}
+        onChange={setSection}
+        userEmail="nivedita.arya.k1@gmail.com"
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
+
+      <div className="lg:pl-64">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+          <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
+            <button
+              className="text-muted-foreground lg:hidden"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-sm font-semibold text-foreground">{meta.title}</h1>
             </div>
-            <span className="font-semibold text-foreground">Expense Tracker</span>
-            <Badge variant="secondary" className="text-xs">Beta</Badge>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* Month selector */}
-            <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="w-[130px] h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map((m, i) => (
-                  <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select value={month} onValueChange={setMonth}>
+                <SelectTrigger className="h-9 w-[110px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m, i) => (
+                    <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Year selector */}
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="w-[90px] h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[2023, 2024, 2025, 2026].map(y => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger className="hidden h-9 w-[85px] text-sm sm:flex">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[2023, 2024, 2025, 2026].map(y => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={fetchData} disabled={loading}>
+                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              </Button>
 
-            <Button size="sm" onClick={() => setShowModal(true)}>
-              <Plus size={14} />
-              Add
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-screen-xl mx-auto px-6 py-6">
-        <Tabs defaultValue="overview">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h1 className="text-xl font-bold text-foreground">
-                {SHORT_MONTHS[monthIdx]} {year}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Your financial overview</p>
+              <Button size="sm" className="h-9" onClick={() => setShowModal(true)}>
+                <Plus size={14} />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
             </div>
-            <TabsList>
-              <TabsTrigger value="overview" className="gap-1.5">
-                <Activity size={14} /> Overview
-              </TabsTrigger>
-              <TabsTrigger value="transactions" className="gap-1.5">
-                <ArrowUpDown size={14} /> Transactions
-              </TabsTrigger>
-            </TabsList>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
+          <div className="mb-5 flex items-baseline gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
+              {SHORT_MONTHS[monthIdx]} {year}
+            </h2>
+            <span className="text-sm text-muted-foreground">· {meta.subtitle}</span>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-24">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
                 <p className="text-sm text-muted-foreground">Loading expenses...</p>
               </div>
             </div>
           ) : (
             <>
-              <TabsContent value="overview" className="mt-0 space-y-5">
-                {/* Stats grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <StatsCard
-                    title="Total Spent"
-                    value={stats ? fmt(stats.summary.totalSpend) : '—'}
-                    subtitle={`${transactions.filter(t => t.type === 'debit').length} transactions`}
-                    icon={TrendingDown}
-                    iconClassName="bg-red-100 text-red-600"
-                  />
-                  <StatsCard
-                    title="Total Income"
-                    value={stats ? fmt(stats.summary.totalIncome) : '—'}
-                    subtitle={`${transactions.filter(t => t.type === 'credit').length} credits`}
-                    icon={TrendingUp}
-                    iconClassName="bg-emerald-100 text-emerald-600"
-                  />
-                  <StatsCard
-                    title="Net Savings"
-                    value={stats ? fmt(stats.summary.savings) : '—'}
-                    subtitle={stats && stats.summary.savings >= 0 ? '🎉 Saved this month' : '⚠️ Over budget'}
-                    icon={Wallet}
-                    iconClassName={stats && stats.summary.savings >= 0 ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}
-                  />
-                  <StatsCard
-                    title="Avg Transaction"
-                    value={stats ? fmt(stats.summary.avgTransaction) : '—'}
-                    subtitle="per transaction"
-                    icon={ArrowUpDown}
-                    iconClassName="bg-purple-100 text-purple-600"
-                  />
-                </div>
+              {section === 'overview' && (
+                <div className="animate-fade-in space-y-5">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title="Total Spent"
+                      value={stats ? fmt(stats.summary.totalSpend) : '—'}
+                      subtitle={`${transactions.filter(t => t.type === 'debit').length} transactions`}
+                      icon={TrendingDown}
+                      iconClassName="bg-status-critical/10 text-status-critical"
+                    />
+                    <StatsCard
+                      title="Total Income"
+                      value={stats ? fmt(stats.summary.totalIncome) : '—'}
+                      subtitle={`${transactions.filter(t => t.type === 'credit').length} credits`}
+                      icon={TrendingUp}
+                      iconClassName="bg-status-good/10 text-status-good"
+                    />
+                    <StatsCard
+                      title="Net Savings"
+                      value={stats ? fmt(stats.summary.savings) : '—'}
+                      subtitle={stats && stats.summary.savings >= 0 ? 'Saved this period' : 'Over budget'}
+                      icon={Wallet}
+                      iconClassName={stats && stats.summary.savings >= 0 ? 'bg-cat-1/10 text-cat-1' : 'bg-status-serious/10 text-status-serious'}
+                    />
+                    <StatsCard
+                      title="Avg Transaction"
+                      value={stats ? fmt(stats.summary.avgTransaction) : '—'}
+                      subtitle="per transaction"
+                      icon={ArrowUpDown}
+                      iconClassName="bg-cat-5/10 text-cat-5"
+                    />
+                  </div>
 
-                {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                        Daily Spend — {SHORT_MONTHS[monthIdx]}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <DailyTrendChart trend={stats?.trend || []} />
-                    </CardContent>
-                  </Card>
+                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                          Daily Spend — {SHORT_MONTHS[monthIdx]}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <DailyTrendChart trend={stats?.trend || []} />
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                        6-Month Comparison
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <MonthlyComparisonChart monthly={stats?.monthly || []} />
-                    </CardContent>
-                  </Card>
-                </div>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                          6-Month Comparison
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <MonthlyComparisonChart monthly={stats?.monthly || []} />
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                {/* Category + Recent */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                        Spending by Category
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CategoryBreakdown
-                        categories={stats?.categories || []}
-                        totalSpend={stats?.summary.totalSpend || 0}
-                      />
-                    </CardContent>
-                  </Card>
+                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                          Spending by Category
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CategoryBreakdown
+                          categories={stats?.categories || []}
+                          totalSpend={stats?.summary.totalSpend || 0}
+                        />
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                      <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                        Recent Transactions
-                      </CardTitle>
-                      <Badge variant="secondary">{transactions.length}</Badge>
-                    </CardHeader>
-                    <CardContent>
-                      <TransactionList
-                        transactions={transactions.slice(0, 8)}
-                        onDelete={handleDelete}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                          Recent Transactions
+                        </CardTitle>
+                        <Badge variant="secondary">{transactions.length}</Badge>
+                      </CardHeader>
+                      <CardContent>
+                        <TransactionList
+                          transactions={transactions.slice(0, 8)}
+                          onDelete={handleDelete}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                {/* Agent CTA */}
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
-                        <Terminal size={16} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Background SMS Agent</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Auto-import transactions from iMessage. Run{' '}
-                          <code className="bg-primary/10 px-1.5 py-0.5 rounded text-primary font-mono text-xs">npm run agent</code>
-                          {' '}in your terminal to start the watcher.
-                        </p>
-                      </div>
+                  <button
+                    onClick={() => setSection('agent')}
+                    className="flex w-full items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left transition-colors hover:bg-primary/10"
+                  >
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Terminal size={16} />
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">Background SMS Agent</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Auto-import transactions from iMessage. View setup instructions →
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
 
-              <TabsContent value="transactions" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              {section === 'transactions' && (
+                <Card className="animate-fade-in">
+                  <CardHeader className="flex flex-row items-center justify-between pb-3">
                     <div>
                       <CardTitle>All Transactions</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {SHORT_MONTHS[monthIdx]} {year} · {transactions.length} total
                       </p>
                     </div>
@@ -286,10 +298,83 @@ export default function Dashboard() {
                     <TransactionList transactions={transactions} onDelete={handleDelete} />
                   </CardContent>
                 </Card>
-              </TabsContent>
+              )}
+
+              {section === 'categories' && (
+                <div className="animate-fade-in grid grid-cols-1 gap-5 lg:grid-cols-3">
+                  <Card className="lg:col-span-2">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Spending by Category — {SHORT_MONTHS[monthIdx]} {year}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CategoryBreakdown
+                        categories={stats?.categories || []}
+                        totalSpend={stats?.summary.totalSpend || 0}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-4">
+                    <StatsCard
+                      title="Total Spent"
+                      value={stats ? fmt(stats.summary.totalSpend) : '—'}
+                      subtitle={`across ${stats?.categories.length || 0} categories`}
+                      icon={TrendingDown}
+                      iconClassName="bg-status-critical/10 text-status-critical"
+                    />
+                    <StatsCard
+                      title="Top Category"
+                      value={stats?.categories[0]?.category || '—'}
+                      subtitle={stats?.categories[0] ? fmt(stats.categories[0].amount) : undefined}
+                      icon={Wallet}
+                      iconClassName="bg-cat-1/10 text-cat-1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {section === 'agent' && (
+                <div className="animate-fade-in mx-auto max-w-2xl">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Terminal size={20} />
+                        </div>
+                        <div>
+                          <CardTitle>Background SMS Agent</CardTitle>
+                          <p className="mt-0.5 text-sm text-muted-foreground">
+                            Automatically parse and import bank SMS as they arrive
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <Separator />
+                    <CardContent className="space-y-4 pt-5">
+                      <p className="text-sm text-muted-foreground">
+                        Run the watcher in your terminal to continuously import transactions detected
+                        from iMessage/SMS forwarding. It categorizes and adds new transactions automatically.
+                      </p>
+                      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 px-4 py-3">
+                        <code className="font-mono text-sm text-foreground">npm run agent</code>
+                        <Button variant="outline" size="sm" onClick={copyCommand}>
+                          {copied ? <Check size={14} /> : <Copy size={14} />}
+                          {copied ? 'Copied' : 'Copy'}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Don&apos;t have SMS forwarding set up? Use the <span className="font-medium text-foreground">Add</span> button
+                        to paste a bank SMS manually and it&apos;ll be parsed the same way.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </>
           )}
-        </Tabs>
+        </main>
       </div>
 
       {showModal && (

@@ -24,7 +24,7 @@ export default function StatsCard({
   iconClassName,
 }: StatsCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-all hover:border-primary/30 hover:shadow-md">
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <div className={cn('p-3 rounded-xl flex-shrink-0', iconClassName || 'bg-primary/10 text-primary')}>

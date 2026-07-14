@@ -6,6 +6,7 @@ const config: Config = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -48,6 +49,28 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        chart: {
+          grid: 'hsl(var(--chart-grid))',
+          baseline: 'hsl(var(--chart-baseline))',
+          muted: 'hsl(var(--chart-ink-muted))',
+        },
+        status: {
+          good: 'hsl(var(--status-good))',
+          warning: 'hsl(var(--status-warning))',
+          serious: 'hsl(var(--status-serious))',
+          critical: 'hsl(var(--status-critical))',
+        },
+        cat: {
+          1: 'hsl(var(--cat-1))',
+          2: 'hsl(var(--cat-2))',
+          3: 'hsl(var(--cat-3))',
+          4: 'hsl(var(--cat-4))',
+          5: 'hsl(var(--cat-5))',
+          6: 'hsl(var(--cat-6))',
+          7: 'hsl(var(--cat-7))',
+          8: 'hsl(var(--cat-8))',
+          muted: 'hsl(var(--cat-muted))',
+        },
       },
       keyframes: {
         'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
