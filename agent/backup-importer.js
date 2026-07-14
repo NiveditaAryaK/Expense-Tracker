@@ -99,8 +99,15 @@ function querySmsDb(smsDbPath) {
       lower(m.text) LIKE '%payment%'
     )`
 
+    // m.text often contains embedded newlines (real SMS are multi-line), which
+    // would otherwise split one logical row across several physical output
+    // lines and corrupt the '|||'-delimited parsing below. Replace them with
+    // a sentinel here and restore them after parsing.
+    const NEWLINE_SENTINEL = '␤' // SYMBOL FOR NEWLINE — vanishingly unlikely in real SMS text
+    const textExpr = `replace(m.text, char(10), '${NEWLINE_SENTINEL}')`
+
     const sql = `
-      SELECT m.ROWID, m.text, m.date, h.id AS sender, m.service
+      SELECT m.ROWID, ${textExpr}, m.date, h.id AS sender, m.service
       FROM message m
       LEFT JOIN handle h ON m.handle_id = h.ROWID
       WHERE m.is_from_me = 0
@@ -136,7 +143,7 @@ function querySmsDb(smsDbPath) {
 
       return {
         rowid: parseInt(rowid),
-        text: text.trim(),
+        text: text.replaceAll(NEWLINE_SENTINEL, '\n').trim(),
         date: new Date(dateMs),
         sender: (sender || 'unknown').trim(),
         source: 'backup',

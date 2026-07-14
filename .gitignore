@@ -6,3 +6,4 @@ env/
 prisma/dev.db
 .DS_Store
 agent/.agent-state.json
+agent/logs/
